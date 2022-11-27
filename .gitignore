@@ -1,0 +1,3 @@
+*.gpkg
+*.pyc
+__pycache__/
