@@ -1,3 +1,4 @@
-*.gpkg
 *.pyc
 __pycache__/
+*.csv
+*buildings_uk.gpkg
