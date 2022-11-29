@@ -42,7 +42,7 @@ class BuildingHeights:
         for raster in rasters:
             gdf_clip = bz.get_buildings_using_bounds(
                 raster,
-                self.gdf
+                gdf
             )
             grid = bz.rasterise_clip(raster, gdf_clip)
             df = bz.get_building_height_stats(grid, self.stats)
