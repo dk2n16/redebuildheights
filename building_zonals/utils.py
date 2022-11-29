@@ -130,6 +130,7 @@ def find_missing_buildings(
     df = pd.read_csv(csv).set_index('osm_id')
     gdf['centroid'] = gdf.centroid
     gdf = gdf.set_geometry('centroid')
+    df = df[[x for x in df.columns if not x == 'tile_name']]
     gdf = gdf.join(df, how='left').reset_index()
     heights_col = [x for x in df.columns if x.startswith('heights')][0]
     gdf = gdf[gdf[heights_col].isna()]
