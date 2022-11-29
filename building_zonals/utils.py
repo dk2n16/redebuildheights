@@ -137,16 +137,14 @@ def find_missing_buildings(
 
 
 def sample_missing_buildings_and_join_back_to_csv(
-    gpkg: Union[Path, str],
-    layer: Union[Path, str],
+    gdf: gpd.GeoDataFrame,
     csv: Union[Path, str],
     raster_dir: Union[Path, str]
 ) -> pd.DataFrame:
     """Samples missing buildings to rasters to fill in vals
     
     Args:
-    gpkg: Path to geopackage
-    layer: Layer in geopackage
+    gdf: Buildings geodataframe
     csv: Path to zonals csv
     raster_dir: Folder in which rasters are held
 
@@ -154,7 +152,7 @@ def sample_missing_buildings_and_join_back_to_csv(
     -------
     df: DataFrame with missing values filled
     """
-    gdf_missing = find_missing_buildings(gpkg, layer, csv)
+    gdf_missing = find_missing_buildings(gdf, csv)
     gdf_missing = gdf_missing[[x for x in gdf_missing.columns if not x in ['fid', 'code', 'fclass', 'name', 'type', 'geometry',
        ]]]
     grid_ids = list(gdf_missing.tile_name.unique())

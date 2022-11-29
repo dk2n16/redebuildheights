@@ -40,15 +40,15 @@ class BuildingHeights:
             tmp_csv_folder.mkdir()
         print('STARTING ZONALS')
         for raster in rasters:
-            gdf_clip = bz.get_buildings_using_bounds(
-                raster,
-                gdf
-            )
-            grid = bz.rasterise_clip(raster, gdf_clip)
-            df = bz.get_building_height_stats(grid, self.stats)
-            df['tile_name'] = raster.name.split('_')[2]
             out_csv = tmp_csv_folder.joinpath(f'{raster.stem}.csv')
             if not out_csv.exists():
+                gdf_clip = bz.get_buildings_using_bounds(
+                    raster,
+                    gdf
+                )
+                grid = bz.rasterise_clip(raster, gdf_clip)
+                df = bz.get_building_height_stats(grid, self.stats)
+                df['tile_name'] = raster.name.split('_')[2]
                 df.to_csv(out_csv, index=False)
         ZONALS_TABLE = tmp_csv_folder.joinpath('ZONALS.csv')
         print('COMPLETED ZONALS')
@@ -57,8 +57,7 @@ class BuildingHeights:
         zonals_df.to_csv(ZONALS_TABLE, index=False)
         print('GETTING MISSING BUILDINGS')
         df_missing = bz.sample_missing_buildings_and_join_back_to_csv(
-            self.building_gpkg,
-            self.building_layer,
+            gdf,
             ZONALS_TABLE,
             self.raster_dir
         )
