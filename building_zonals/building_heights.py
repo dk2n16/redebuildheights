@@ -63,9 +63,10 @@ class BuildingHeights:
         )
         print('GOT MISSING BUILDINGS')
         height_col = [x for x in df_missing.columns if x.startswith('heights')][0]
-        zonals_df = zonals_df[height_col].dropna()
+        #zonals_df = zonals_df[height_col].dropna()
+        zonals_df = zonals_df.dropna()
         df_final = pd.concat([zonals_df, df_missing])
-        df_final = df.groupby(self.building_id_field).agg({
+        df_final = df_final.groupby(self.building_id_field).agg({
                 "heights_mean": ['mean'],
                 "heights_min": ['min'],
                 "heights_max": ['max'],
@@ -76,6 +77,7 @@ class BuildingHeights:
         print('SAVED ZONALS TABLE')
         if self.save_output_gpkg and self.output_gpkg and self.output_layer:
             print('SAVING BUILDINGS')
+            gdf = gdf.set_index(self.building_id_field)
             gdf_join = gdf.join(df_final, how='inner')
             gdf_join = gdf_join[['name', 'type', 'tile_name', "heights_mean", "heights_min", "heights_max", "heights_med", "geometry"]]
             gdf_join.to_file(self.output_gpkg, layer=self.output_layer)

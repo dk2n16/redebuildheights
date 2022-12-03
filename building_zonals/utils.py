@@ -128,6 +128,7 @@ def find_missing_buildings(
     """
     gdf = gdf.set_index('osm_id')
     df = pd.read_csv(csv).set_index('osm_id')
+    gdf = gdf[gdf.tile_name.isin(df.tile_name.unique())]
     gdf['centroid'] = gdf.centroid
     gdf = gdf.set_geometry('centroid')
     df = df[[x for x in df.columns if not x == 'tile_name']]
