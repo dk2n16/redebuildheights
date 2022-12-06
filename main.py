@@ -15,7 +15,7 @@ def main():
     stats = ['mean', 'med']
     output_gpkg = building_gpkg
     output_layer = 'building_heights'
-    bz.BuildingHeights(
+    bz.BuildingHeightsSingle(
         building_shp,
         building_gpkg,
         building_layer,

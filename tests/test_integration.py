@@ -13,21 +13,24 @@ RASTER_2 = DATA_DIR.joinpath('rasters/TQ38_2.tif')
 OUT_GPKG = DATA_DIR.joinpath('buildings_uk.gpkg')
 OUT_LAYER = 'buildings_uk'
 ZONALS_CSV = DATA_DIR.joinpath('TQ38.csv')
+HEIGHTS_LAYER = 'building_heights'
 
 @pytest.fixture
 def build():
-    x = bz.BuildingHeights(
+    x = bz.BuildingHeightsSingle(
             SHP,
             OUT_GPKG,
             OUT_LAYER,
             'osm_id', 
             27700, 
             DATA_DIR.joinpath('rasters'),
-            ['mean'])
+            ['mean'],
+            OUT_GPKG,
+            HEIGHTS_LAYER)
     yield x
 
 def test_instantiation(build):
-    assert isinstance(build, bz.BuildingHeights)
+    assert isinstance(build, bz.BuildingHeightsSingle)
     assert build.building_id_field == 'osm_id'
     assert build.building_crs == 27700
 
