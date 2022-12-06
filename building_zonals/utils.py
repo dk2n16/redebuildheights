@@ -124,17 +124,16 @@ def find_missing_buildings(
     csv : Path to csv
 
     Returns:
-    gdf : Dataframe of missing buildings
+    gdf_small : Dataframe of small missing buildings
+    gdf_overlapping: Dataframe of buildings presumed to be overlapping
     """
-    gdf = gdf.set_index('osm_id')
-    df = pd.read_csv(csv).set_index('osm_id')
-    gdf['centroid'] = gdf.centroid
-    gdf = gdf.set_geometry('centroid')
-    df = df[[x for x in df.columns if not x == 'tile_name']]
-    gdf = gdf.join(df, how='left').reset_index()
-    heights_col = [x for x in df.columns if x.startswith('heights')][0]
-    gdf = gdf[gdf[heights_col].isna()]
-    return gdf
+    df = pd.read_csv(csv)
+    tiles = list(df.tile_name.unique())
+    gdf = gdf[gdf.tile_name.isin(tiles)]
+    gdf = gdf[~gdf.osm_id.isin(df.osm_id.unique())]
+    gdf_small = gdf[gdf.area <= 1.5]
+    gdf_overlapping = gdf[gdf.area > 1.5]
+    return gdf_small, gdf_overlapping
 
 
 def sample_missing_buildings_and_join_back_to_csv(
@@ -152,13 +151,12 @@ def sample_missing_buildings_and_join_back_to_csv(
     Returns:
     -------
     df: DataFrame with missing values filled
+    gdf_overlapping: Gdf of buildings presumed to be overlapping
     """
-    gdf_missing = find_missing_buildings(gdf, csv)
-    gdf_missing = gdf_missing[[x for x in gdf_missing.columns if not x in ['fid', 'code', 'fclass', 'name', 'type', 'geometry',
-       ]]]
+    gdf_missing, gdf_overlapping = find_missing_buildings(gdf, csv)
+    gdf_missing = gdf_missing[[x for x in gdf_missing.columns if not x in ['fid', 'code', 'fclass', 'name', 'type']]]
     grid_ids = list(gdf_missing.tile_name.unique())
     for id in grid_ids:
-        raster = raster_dir.joinpath(f'{id}.tif')
         raster = raster_dir.joinpath(f'DSM_DTM_{id}_m100_10K_Tile.tif')
         if raster.exists():
             gdf_subset = gdf_missing[gdf_missing.tile_name == id]
@@ -173,7 +171,7 @@ def sample_missing_buildings_and_join_back_to_csv(
                 gdf_subset.loc[gdf_subset[col]==nodata, col] = np.nan
             gdf_missing = pd.concat([gdf_missing, gdf_subset])
     df = gdf_missing[[x for x in gdf_missing.columns if not x in ['tile_name','centroid']]]
-    return df
+    return df, gdf_overlapping
 
 
 

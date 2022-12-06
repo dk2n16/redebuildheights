@@ -21,10 +21,10 @@ ZONALS_CSV = DATA_DIR.joinpath('TQ38.csv')
 #fixtures
 @pytest.fixture
 def gdf_clip():
+    gdf = gpd.read_file(OUT_GPKG, layer=OUT_LAYER)
     gdf_clip = building_zonals.get_buildings_using_bounds(
         RASTER_1,
-        OUT_GPKG,
-        OUT_LAYER
+        gdf
     )
     yield gdf_clip
 
@@ -69,7 +69,9 @@ def test_join_csvs_and_aggregate():
     pass
 
 def test_find_missing_buildings():
-    gdf_missing = building_zonals.find_missing_buildings(OUT_GPKG, OUT_LAYER, ZONALS_CSV)
+    gdf = gpd.read_file(OUT_GPKG, layer=OUT_LAYER)
+    gdf['tile_name'] = 'TQ38'
+    gdf_missing = building_zonals.find_missing_buildings(gdf, ZONALS_CSV)
     df = pd.read_csv(ZONALS_CSV)
     df_missing = df[df.osm_id.isin(gdf_missing.osm_id)]
     assert df_missing.empty
@@ -77,9 +79,9 @@ def test_find_missing_buildings():
 
 
 def test_sample_missing_buildings_and_join_back_to_csv():
+    gdf = gpd.read_file(OUT_GPKG, layer=OUT_LAYER)
     df = building_zonals.sample_missing_buildings_and_join_back_to_csv(
-        OUT_GPKG,
-        OUT_LAYER,
+        gdf,
         ZONALS_CSV,
         DATA_DIR.joinpath('rasters')
     )
