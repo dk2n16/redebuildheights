@@ -10,6 +10,58 @@ import pandas as pd
 
 import building_zonals as bz
 
+@dataclass
+class BuildingHeights:
+    """Processes zonal stats in chunks"""
+    building_shp: Union[str, Path]
+    building_gpkg: Union[str, Path]
+    building_layer: str
+    building_id_field: str
+    building_crs: int
+    raster : Union[str, Path]
+    stats: List[str]
+    output_gpkg: Optional[Union[str, Path, None]] = None
+    output_layer: Optional[Union[str, None]] = None
+    save_output_gpkg: Optional[bool] = True
+
+    def process(self):
+        gdf = gpd.read_file(self.building_gpkg, layer=self.building_layer)
+        self.get_building_heights(gdf, self.raster)
+        
+
+    def get_building_heights(
+        self,
+        gdf_clip: gpd.GeoDataFrame,
+        raster: Union[Path, str]):
+        """Rasterises, calculates heights and saves csv
+        
+        Args:
+        gdf_clip: Buildings clipped to raster
+        raster: Path to raster
+
+        Returns:
+        None
+        """
+        out_csv = self.building_gpkg.parent.joinpath(f'{self.building_gpkg.stem}.csv')
+        if not out_csv.exists():
+            grid = bz.rasterise_clip(raster, gdf_clip)
+            df = bz.get_building_height_stats(grid, self.stats)
+            df['tile_name'] = raster.name.split('_')[2]
+            df.to_csv(out_csv, index=False)
+            df_missing, gdf_overlapping = bz.sample_missing_buildings_and_join_back_to_csv(
+                gdf_clip,
+                self.building_gpkg.parent.joinpath(f'{self.building_gpkg.stem}.csv'),
+                self.raster.parent
+            )
+            df_zonals = pd.concat([df, df_missing])
+            df.to_csv(out_csv, index=False)
+            if not gdf_overlapping.empty:
+                gdf_overlapping.to_file(self.output_gpkg, layer='overlapping_buildins', index=False)
+
+            
+
+
+
 
 @dataclass
 class BuildingHeightsSingle:
