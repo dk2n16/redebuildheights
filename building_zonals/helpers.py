@@ -39,4 +39,5 @@ def save_gpkg_to_folder(
         out_dir.mkdir(parents=True)
     gdf.to_file(out_dir.joinpath(f'{tile_name}.gpkg'), layer='buildings_uk', index=False)
     raster = raster_dir.joinpath(f'DSM_DTM_{tile_name}_m100_10K_Tile.tif')
-    shutil.move(raster, out_dir)
+    if raster.exists():
+        shutil.move(raster, out_dir)

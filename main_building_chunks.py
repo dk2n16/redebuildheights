@@ -27,21 +27,24 @@ def main():
         stats = ['mean', 'med']
         output_gpkg = building_gpkg
         output_layer = 'building_heights'
-        x = bz.BuildingHeights(
-            building_shp,
-            building_gpkg,
-            building_layer,
-            building_id_field,
-            building_crs,
-            raster,
-            stats,
-            output_gpkg=output_gpkg,
-            output_layer=output_layer,
-            save_output_gpkg=True
-        )
-        logging.info(f'PROCESSING {tile.name} - {datetime.now()}')
-        x.process()
-        logging.info(f'FINISHED PROCESSING {tile.name} - {datetime.now()}')
+        if raster.exists():
+            x = bz.BuildingHeights(
+                building_shp,
+                building_gpkg,
+                building_layer,
+                building_id_field,
+                building_crs,
+                raster,
+                stats,
+                output_gpkg=output_gpkg,
+                output_layer=output_layer,
+                save_output_gpkg=True
+            )
+            logging.info(f'PROCESSING {tile.name} - {datetime.now()}')
+            x.process()
+            logging.info(f'FINISHED PROCESSING {tile.name} - {datetime.now()}')
+        else:
+            logging.info(f'RASTER MISSING {raster.name} - {datetime.now()}')
     logging.info(f'MAKING ZONALS - {datetime.now()}')
     make_zonals_table()
     logging.info(f'JOINING EVERYTHING TO GPKG - {datetime.now()}')
@@ -83,10 +86,12 @@ def chunk_buildings_and_move_rasters():
     out_parent = DATA_DIR.joinpath('tiles')
     raster_dir = DATA_DIR
     for cell, tile_name in bz.iterate_grid_cells():
-        logging.info(f'CHUNKING {tile_name} - {datetime.now()}')
-        gdf_clip = bz.extract_from_buildings(GPKG, 'buildings_uk', cell)
         if not out_parent.joinpath(tile_name, f'{tile_name}.gpkg').exists():
+            logging.info(f'CHUNKING {tile_name} - {datetime.now()}')
+            gdf_clip = bz.extract_from_buildings(GPKG, 'buildings_uk', cell)
             bz.save_gpkg_to_folder(gdf_clip, out_parent, raster_dir, tile_name)
+        else:
+            logging.info(f'ALREADY PREPROCESSED {tile_name} - {datetime.now()}')
 
 
 if __name__ == "__main__":
