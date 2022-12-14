@@ -13,7 +13,7 @@ def iterate_grid_cells() -> list:
     """Returns bounding box of cell as list"""
     gdf = gpd.read_file(GRID, layer='OS_10km_tiles_buildings')
     #######TESTING ONLY######
-    #gdf = gdf[gdf.tile_name.isin(['TL23', 'TL24', 'TL25', 'TL26', 'TL33', 'TL34', 'TL35', 'TL36', 'TL43', 'TL44', 'TL45', 'TL46', 'TL53', 'TL54', 'TL55', 'TL56', 'TL63', 'TL64', 'TL65', 'TL66', 'TQ36', 'TQ37', 'TQ38'])]
+    # gdf = gdf[gdf.tile_name.isin(['TL23', 'TL24', 'TL25', 'TL26', 'TL33', 'TL34', 'TL35', 'TL36', 'TL43', 'TL44', 'TL45', 'TL46', 'TL53', 'TL54', 'TL55', 'TL56', 'TL63', 'TL64', 'TL65', 'TL66'])]
     for row in gdf.itertuples():
         yield list(row.geometry.bounds), row.tile_name
 
@@ -39,4 +39,6 @@ def save_gpkg_to_folder(
         out_dir.mkdir(parents=True)
     gdf.to_file(out_dir.joinpath(f'{tile_name}.gpkg'), layer='buildings_uk', index=False)
     raster = raster_dir.joinpath(f'DSM_DTM_{tile_name}_m100_10K_Tile.tif')
-    shutil.move(raster, out_dir)
+    if not out_dir.joinpath(raster.name).exists():
+        if raster.exists():
+            shutil.move(raster, out_dir)
