@@ -19,33 +19,33 @@ def main():
     logging.info(f'START CHUNKING - {datetime.now()}')
     chunk_buildings_and_move_rasters()
     logging.info(f'FINISED CHUNKING  - {datetime.now()}')
-    # for index, tile in enumerate(DATA_DIR.joinpath('tiles').iterdir()):
-    #     building_gpkg = tile.joinpath(f'{tile.name}.gpkg')
-    #     building_layer = 'buildings_uk'
-    #     building_id_field = 'osm_id'
-    #     building_crs = 27700
-    #     raster = tile.joinpath(f'DSM_DTM_{tile.name}_m100_10K_Tile.tif')
-    #     stats = ['mean', 'med']
-    #     output_gpkg = building_gpkg
-    #     output_layer = 'building_heights'
-    #     if raster.exists():
-    #         x = bz.BuildingHeights(
-    #             building_shp,
-    #             building_gpkg,
-    #             building_layer,
-    #             building_id_field,
-    #             building_crs,
-    #             raster,
-    #             stats,
-    #             output_gpkg=output_gpkg,
-    #             output_layer=output_layer,
-    #             save_output_gpkg=True
-    #         )
-    #         logging.info(f'PROCESSING {tile.name} - {datetime.now()}')
-    #         x.process()
-    #         logging.info(f'FINISHED PROCESSING {tile.name} - {datetime.now()}')
-    #     else:
-    #         logging.info(f'RASTER MISSING {raster.name} - {datetime.now()}')
+    for index, tile in enumerate(DATA_DIR.joinpath('tiles').iterdir()):
+        building_gpkg = tile.joinpath(f'{tile.name}.gpkg')
+        building_layer = 'buildings_uk'
+        building_id_field = 'osm_id'
+        building_crs = 27700
+        raster = tile.joinpath(f'DSM_DTM_{tile.name}_m100_10K_Tile.tif')
+        stats = ['mean', 'min', 'max', 'med']
+        output_gpkg = building_gpkg
+        output_layer = 'building_heights'
+        if raster.exists():
+            x = bz.BuildingHeights(
+                building_shp,
+                building_gpkg,
+                building_layer,
+                building_id_field,
+                building_crs,
+                raster,
+                stats,
+                output_gpkg=output_gpkg,
+                output_layer=output_layer,
+                save_output_gpkg=True
+            )
+            logging.info(f'PROCESSING {tile.name} - {datetime.now()}')
+            x.process()
+            logging.info(f'FINISHED PROCESSING {tile.name} - {datetime.now()}')
+        else:
+            logging.info(f'RASTER MISSING {raster.name} - {datetime.now()}')
     logging.info(f'MAKING ZONALS - {datetime.now()}')
     make_zonals_table()
     logging.info(f'JOINING EVERYTHING TO GPKG - {datetime.now()}')
