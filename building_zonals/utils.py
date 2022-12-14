@@ -72,7 +72,7 @@ def rasterise_clip(
     Returns:
     out_grid: rasterised gdf dataset merged with raster data
     """
-    rx = rioxarray.open_rasterio(raster)
+    rx = rioxarray.open_rasterio(raster, mask_and_scale=True)
     out_grid = make_geocube(
             vector_data=gdf, 
             measurements=['osm_id'], 

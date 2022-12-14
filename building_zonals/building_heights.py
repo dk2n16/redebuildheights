@@ -56,7 +56,7 @@ class BuildingHeights:
             df_zonals = pd.concat([df, df_missing])
             df.to_csv(out_csv, index=False)
             if not gdf_overlapping.empty:
-                gdf_overlapping.to_file(self.output_gpkg, layer='overlapping_buildins', index=False)
+                gdf_overlapping.to_file(self.output_gpkg, layer='overlapping_buildings', index=False)
 
             
 

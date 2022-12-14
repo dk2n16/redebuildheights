@@ -6,9 +6,10 @@ import pandas as pd
 import geopandas as gpd
 import logging
 from datetime import datetime
+import fiona
 
 BASE = Path(__file__).resolve().parent
-GPKG = Path(r'C:\Users\dkerr\Documents\GISRede\buildings\UK\London\data\building_heights_tiles\buildings.gpkg').resolve()
+GPKG = Path(r'C:\Users\dkerr\Documents\GISRede\buildings\UK\London\data\building_heights_tiles\buildings_subset.gpkg').resolve()
 DATA_DIR = GPKG.parent.joinpath('rasters')
 building_shp = DATA_DIR.joinpath('gis_osm_buildings_a_free_1.shp')
 
@@ -18,40 +19,40 @@ def main():
     logging.info(f'START CHUNKING - {datetime.now()}')
     chunk_buildings_and_move_rasters()
     logging.info(f'FINISED CHUNKING  - {datetime.now()}')
-    for index, tile in enumerate(DATA_DIR.joinpath('tiles').iterdir()):
-        building_gpkg = tile.joinpath(f'{tile.name}.gpkg')
-        building_layer = 'buildings_uk'
-        building_id_field = 'osm_id'
-        building_crs = 27700
-        raster = tile.joinpath(f'DSM_DTM_{tile.name}_m100_10K_Tile.tif')
-        stats = ['mean', 'med']
-        output_gpkg = building_gpkg
-        output_layer = 'building_heights'
-        if raster.exists():
-            x = bz.BuildingHeights(
-                building_shp,
-                building_gpkg,
-                building_layer,
-                building_id_field,
-                building_crs,
-                raster,
-                stats,
-                output_gpkg=output_gpkg,
-                output_layer=output_layer,
-                save_output_gpkg=True
-            )
-            logging.info(f'PROCESSING {tile.name} - {datetime.now()}')
-            x.process()
-            logging.info(f'FINISHED PROCESSING {tile.name} - {datetime.now()}')
-        else:
-            logging.info(f'RASTER MISSING {raster.name} - {datetime.now()}')
+    # for index, tile in enumerate(DATA_DIR.joinpath('tiles').iterdir()):
+    #     building_gpkg = tile.joinpath(f'{tile.name}.gpkg')
+    #     building_layer = 'buildings_uk'
+    #     building_id_field = 'osm_id'
+    #     building_crs = 27700
+    #     raster = tile.joinpath(f'DSM_DTM_{tile.name}_m100_10K_Tile.tif')
+    #     stats = ['mean', 'med']
+    #     output_gpkg = building_gpkg
+    #     output_layer = 'building_heights'
+    #     if raster.exists():
+    #         x = bz.BuildingHeights(
+    #             building_shp,
+    #             building_gpkg,
+    #             building_layer,
+    #             building_id_field,
+    #             building_crs,
+    #             raster,
+    #             stats,
+    #             output_gpkg=output_gpkg,
+    #             output_layer=output_layer,
+    #             save_output_gpkg=True
+    #         )
+    #         logging.info(f'PROCESSING {tile.name} - {datetime.now()}')
+    #         x.process()
+    #         logging.info(f'FINISHED PROCESSING {tile.name} - {datetime.now()}')
+    #     else:
+    #         logging.info(f'RASTER MISSING {raster.name} - {datetime.now()}')
     logging.info(f'MAKING ZONALS - {datetime.now()}')
     make_zonals_table()
     logging.info(f'JOINING EVERYTHING TO GPKG - {datetime.now()}')
     join_buildings_to_gpkg()
 
 def make_zonals_table():
-    df_list = [pd.read_csv(x.joinpath(f'{x.name}.csv')) for x in DATA_DIR.joinpath('tiles').iterdir() if x.name in ['TL23', 'TL24']]
+    df_list = [pd.read_csv(x.joinpath(f'{x.name}.csv')) for x in DATA_DIR.joinpath('tiles').iterdir()]
     final_df = pd.concat(df_list)
     assert len(final_df) > len(final_df.osm_id.unique())
     final_df = final_df.groupby('osm_id').agg({
@@ -76,7 +77,11 @@ def join_buildings_to_gpkg():
     logging.info(f'SAVED HEIGHTS - {datetime.now()}')
     gdf_list = []
     for tile in DATA_DIR.joinpath('tiles').iterdir():
-        gdf_overlap = gpd.read_file(tile.joinpath(f'{tile.name}.gpkg'), layer='overlapping_buildings')
+        if tile.is_dir():
+            tile_gpkg = tile.joinpath(f'{tile.name}.gpkg')
+            if 'overlapping_buildings' in fiona.listlayers(tile_gpkg):
+                gdf_overlap = gpd.read_file(tile_gpkg, layer='overlapping_buildings')
+                gdf_list.append(gdf_overlap)
     gdf_overlapping = gpd.GeoDataFrame(pd.concat(gdf_list))
     logging.info(f'SAVING OVERLAPS - {datetime.now()}')
     gdf_overlapping.to_file(GPKG, layer="overlapping_buildings")        
